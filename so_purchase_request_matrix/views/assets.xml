@@ -1,0 +1,4 @@
+<odoo>
+    <!-- Keeping file for potential future asset customizations; XML templates are loaded from static/src/xml via manifest assets -->
+</odoo>
+

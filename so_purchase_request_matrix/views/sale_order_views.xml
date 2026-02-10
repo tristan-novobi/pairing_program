@@ -1,0 +1,16 @@
+<odoo>
+    <record id="view_order_form_inherit_prq" model="ir.ui.view">
+        <field name="name">sale.order.form.inherit.prq</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_order_form"/>
+        <field name="arch" type="xml">
+            <header position="inside">
+                <button name="action_create_purchase_request_wizard" string="Create Purchase Request" type="object" class="oe_highlight" invisible="so_purchase_request_id != False"/>
+            </header>
+            <xpath expr="//sheet/notebook/page[@name='order_lines']//field[@name='order_line']" position="after">
+                <field name="so_purchase_request_id" invisible="1"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>
+

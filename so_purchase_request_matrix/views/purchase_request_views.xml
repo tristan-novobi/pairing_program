@@ -1,0 +1,163 @@
+<odoo>
+    <record id="view_prq_form" model="ir.ui.view">
+        <field name="name">so.purchase.request.form</field>
+        <field name="model">so.purchase.request</field>
+        <field name="arch" type="xml">
+            <form string="Purchase Request" create="1" edit="1">
+                <header>
+                    <button name="action_select_vendors" string="Select Vendors" type="object" invisible="not state in ('draft')" class="oe_highlight"/>
+                    <button name="action_create_rfqs" string="Create RFQs" type="object" invisible="not state in ('vendors_selected')" class="oe_highlight"/>
+                    <button name="action_sync_quotes" string="Sync Quotes" type="object" invisible="not state in ('vendors_selected,rfqs_created')" class="oe_highlight"/>
+                    <button name="action_submit_for_approval" string="Submit for Approval" type="object" invisible="not state in ('rfqs_created')" class="oe_highlight"/>
+                    <button name="action_approve" string="Approve" type="object" invisible="not state in ('waiting_approval')" class="oe_highlight" groups="so_purchase_request_matrix.group_prq_purchase_manager"/>
+                    <button name="action_create_pos" string="Create POs" type="object" invisible="not state in ('approved')" class="oe_highlight" groups="so_purchase_request_matrix.group_prq_purchase_manager"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,vendors_selected,rfqs_created,waiting_approval,approved,po_created"/>
+                </header>
+                <form>
+                    <group class="oe_title">
+                        <h1>
+                            <field name="name" readonly="1"/>
+                        </h1>
+                    </group>
+                    <group>
+                        <group>
+                            <field name="sale_order_id" readonly="1"/>
+                            <field name="company_id" readonly="1"/>
+                            <field name="currency_id" readonly="1"/>
+                        </group>
+                        <group>
+                            <field name="vendor_ids" widget="many2many_tags" options="{'no_create': True}" readonly="state not in ('draft')"/>
+                            <field name="note" widget="text"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Lines">
+                            <field name="line_ids">
+                                <list editable="bottom" create="0">
+                                    <field name="product_id"/>
+                                    <field name="product_uom_id"/>
+                                    <field name="qty_request"/>
+                                    <field name="description"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="RFQs">
+                            <field name="not_final_po_ids" domain="[('is_final_po','=',False)]" create="0">
+                                <list create="0">
+                                    <field name="name"/>
+                                    <field name="partner_id"/>
+                                    <field name="state"/>
+                                    <field name="amount_total"/>
+                                </list>
+                                <form string="RFQ (Quotation)">
+                                    <sheet>
+                                        <group>
+                                            <field name="partner_id"/>
+                                            <field name="state"/>
+                                            <field name="date_order"/>
+                                            <field name="payment_term_id"/>
+                                        </group>
+                                        <field name="order_line">
+                                            <list editable="bottom" create="0">
+                                                <field name="product_id"/>
+                                                <field name="name"/>
+                                                <field name="product_qty"/>
+                                                <field name="product_uom"/>
+                                                <field name="price_unit"/>
+                                                <field name="taxes_id"/>
+                                            </list>
+                                        </field>
+                                    </sheet>
+                                </form>
+                            </field>
+                        </page>
+                        <page string="Comparison Matrix" invisible="state in ('draft,vendors_selected,rfqs_created')">
+                            <field name="comparison_matrix" widget="prq_matrix" nolabel="1" readonly="1"/>
+                        </page>
+                        <page string="Allocations" invisible="state in ('draft,vendors_selected,rfqs_created')">
+                            <field name="allocation_ids" context="{'search_default_groupby_vendor': 1}">
+                                <list editable="bottom" create="0">
+                                    <field name="product_id"/>
+                                    <field name="vendor_id"/>
+                                    <field name="qty_alloc"/>
+                                    <field name="price_unit_alloc"/>
+                                    <field name="currency_id" groups="base.group_multi_currency"/>
+                                    <field name="taxes_id"/>
+                                    <field name="note_alloc"/>
+                                    <field name="quote_line_id"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Purchase Orders" invisible="state not in ('po_created')">
+                            <field name="final_po_ids" domain="[('is_final_po','=',True)]" context="{'form_view_ref': 'purchase.purchase_order_form', 'active_test': False}" create="0" options="{'no_create': True}">
+                                <list create="0">
+                                    <field name="name"/>
+                                    <field name="partner_id"/>
+                                    <field name="state"/>
+                                    <field name="amount_total"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </form>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_prq_allocation_search" model="ir.ui.view">
+        <field name="name">so.purchase.request.allocation.search</field>
+        <field name="model">so.purchase.request.allocation</field>
+        <field name="arch" type="xml">
+            <search string="Search Allocations">
+                <field name="product_id"/>
+                <field name="vendor_id"/>
+                <group expand="0" string="Group By">
+                    <filter name="groupby_vendor" string="Vendor" context="{'group_by': 'vendor_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+    <record id="view_prq_tree" model="ir.ui.view">
+        <field name="name">so.purchase.request.tree</field>
+        <field name="model">so.purchase.request</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="name"/>
+                <field name="sale_order_id"/>
+                <field name="company_id"/>
+                <field name="state"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="action_prq" model="ir.actions.act_window">
+        <field name="name">Purchase Requests</field>
+        <field name="res_model">so.purchase.request</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <!-- Dedicated list view and action for Purchase Employees -->
+    <record id="view_prq_tree_purchase" model="ir.ui.view">
+        <field name="name">so.purchase.request.tree.purchase</field>
+        <field name="model">so.purchase.request</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="name"/>
+                <field name="sale_order_id"/>
+                <field name="vendor_ids" widget="many2many_tags"/>
+                <field name="company_id"/>
+                <field name="state"/>
+                <field name="create_date"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="action_prq_purchase_user" model="ir.actions.act_window">
+        <field name="name">Purchase Requests</field>
+        <field name="res_model">so.purchase.request</field>
+        <field name="view_mode">list,form</field>
+        <field name="view_id" ref="view_prq_tree_purchase"/>
+    </record>
+</odoo>
+

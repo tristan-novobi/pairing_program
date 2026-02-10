@@ -1,0 +1,14 @@
+<odoo>
+    <record id="view_purchase_order_form_inherit_prq" model="ir.ui.view">
+        <field name="name">purchase.order.form.inherit.prq</field>
+        <field name="model">purchase.order</field>
+        <field name="inherit_id" ref="purchase.purchase_order_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//sheet/group/group" position="inside">
+                <field name="so_request_id" readonly="1"/>
+                <field name="is_final_po" readonly="1"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>
+

@@ -1,0 +1,82 @@
+<templates id="template" xml:space="preserve">
+    <t t-name="so_purchase_request_matrix.PrqMatrix">
+        <div class="o_prq_matrix">
+            <t t-if="state.loading">
+                <div class="o_spinner">Loading...</div>
+            </t>
+            <t t-else="">
+                <div class="o_prq_card">
+                    <div class="o_prq_header d-flex align-items-center justify-content-between mb-2">
+                        <div class="d-flex align-items-center gap-2">
+                            <label class="form-check m-0">
+                                <input class="form-check-input" type="checkbox" t-att-checked="state.data.approval_split_by_vendor" t-on-change="this.toggleSplit"/>
+                                <span class="ms-1">Allow Split By Vendor</span>
+                            </label>
+                            <button class="btn btn-primary btn-sm" t-on-click="save">Save Allocations</button>
+                        </div>
+                    </div>
+                    <div class="o_prq_table_wrapper">
+                        <table class="table table-sm o_prq_table">
+                    <thead>
+                        <tr>
+                            <th class="o_prq_sticky_col">Product</th>
+                            <th class="text-center">Quantity</th>
+                            <t t-foreach="state.data.vendors" t-as="vendor" t-key="vendor.id">
+                                <th class="text-center">
+                                    <div class="fw-semibold"><t t-esc="vendor.name"/></div>
+                                    <div class="o_prq_vendor_meta small text-muted text-start">
+                                        Plan: <t t-esc="vendor.date_planned"/>
+                                    </div>
+                                    <div class="o_prq_vendor_meta small text-muted text-start">
+                                        Payment Term: <t t-esc="vendor.payment_term"/>
+                                    </div>
+                                </th>
+                            </t>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <t t-foreach="state.data.lines" t-as="line" t-key="line.product_id">
+                            <tr>
+                                <td class="o_prq_sticky_col"><t t-esc="line.product_name"/></td>
+                                <td class="text-center"><t t-esc="line.qty_request"/> <t t-esc="line.uom_name"/></td>
+                                <t t-foreach="state.data.vendors" t-as="vendor" t-key="vendor.id">
+                                    <td t-att-class="((state.bestByProduct ? (state.bestByProduct[line.product_id] === vendor.id) : false) ? 'is-best ' : '') + ((!state.data.approval_split_by_vendor &amp;&amp; ((state.allocations[`${line.product_id}-${vendor.id}`]?.qty || 0) == line.qty_request)) ? 'is-selected ' : '') + (!state.data.approval_split_by_vendor ? 'o_prq_clickable' : '')" t-on-click="() => this.onCellClick(line, vendor)">
+                                        <t t-set="quote" t-value="line.quotes[vendor.id]"/>
+                                        <div class="text-muted small">
+                                            <t t-if="quote">
+                                                <span class="quote">
+                                                    <t t-esc="quote.price_unit"/> <t t-esc="quote.currency"/>
+                                                </span>
+                                                <t t-if="quote.normalized_price_unit">
+                                                    <span class="text-nowrap ms-1 text-secondary">~ <t t-esc="quote.normalized_price_unit"/></span>
+                                                </t>
+                                                <t t-if="(state.bestByProduct ? (state.bestByProduct[line.product_id] === vendor.id) : false)">
+                                                    <span class="badge bg-success ms-1">Best</span>
+                                                </t>
+                                            </t>
+                                            <t t-if="!quote">
+                                                No quote
+                                            </t>
+                                        </div>
+                                        <div class="d-flex gap-2 align-items-center" t-if="state.data.approval_split_by_vendor">
+                                            <div class="input-group input-group-sm o_prq_qty">
+                                                <input class="form-control" type="number" min="0" t-att-value="state.allocations[`${line.product_id}-${vendor.id}`]?.qty || 0" t-on-input="(ev) => this.onChangeQty(ev, line.product_id, vendor.id)" t-att-placeholder="`Qty`"/>
+                                                <span class="input-group-text"><t t-esc="line.uom_name"/></span>
+                                            </div>
+                                            <div class="input-group input-group-sm o_prq_price">
+                                                <input class="form-control" type="number" min="0" step="0.01" t-att-value="state.allocations[`${line.product_id}-${vendor.id}`]?.price || 0" t-on-input="(ev) => this.onChangePrice(ev, line.product_id, vendor.id)" t-att-placeholder="`Price`"/>
+                                                <span class="input-group-text"><t t-esc="(line.quotes[vendor.id] and line.quotes[vendor.id].currency) or state.data.company_currency"/></span>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </t>
+                            </tr>
+                        </t>
+                    </tbody>
+                        </table>
+                    </div>
+                </div>
+            </t>
+        </div>
+    </t>
+</templates>

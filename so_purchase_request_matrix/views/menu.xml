@@ -1,0 +1,3 @@
+<odoo>
+    <menuitem id="menu_prq_root" name="Purchase Requests" parent="purchase.menu_purchase_root" sequence="60" action="action_prq_purchase_user"/>
+</odoo>
