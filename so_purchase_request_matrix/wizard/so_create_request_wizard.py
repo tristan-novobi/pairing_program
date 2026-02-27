@@ -33,10 +33,3 @@ class SoCreatePurchaseRequestWizard(models.TransientModel):
         if lines_vals:
             self.env["so.purchase.request.line"].create(lines_vals)
         sale.so_purchase_request_id = request.id
-        return {
-            "type": "ir.actions.act_window",
-            "name": _("Purchase Request"),
-            "res_model": "so.purchase.request",
-            "view_mode": "form",
-            "res_id": request.id,
-        }
